@@ -1,0 +1,24 @@
+version: "2"
+services:
+    activemq:
+        image: rmohr/activemq:5.15.6-alpine
+        ports:
+            - 8161:8161
+        expose:    
+            - 61616
+            - 5672
+    rabbitmq:
+        build:
+            dockerfile: Dockerfile-rmqshovel
+            context: .
+        ports:
+            - 15672:15672
+            - 5672:5672            
+        expose:
+            - 4369
+            - 22
+
+    control-plane:
+        build:
+            dockerfile: Dockerfile-controller
+            context: .

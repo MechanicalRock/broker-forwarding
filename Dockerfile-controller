@@ -1,0 +1,9 @@
+FROM "rabbitmq:3-management"
+
+RUN apt-get update && apt-get install -y --no-install-recommends iputils-ping openssh-client netcat-openbsd
+ADD ./wait-for-it.sh /
+ADD ./bootstrap.sh /
+ADD ./keys/controller /var/lib/rabbitmq/.ssh/id_rsa
+RUN chmod 700 /var/lib/rabbitmq
+
+ENTRYPOINT sh /bootstrap.sh

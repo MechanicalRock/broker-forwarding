@@ -1,0 +1,35 @@
+FROM rabbitmq:3.7
+
+RUN rabbitmq-plugins enable --offline rabbitmq_management rabbitmq_shovel_management 
+
+# we will run ssh to grab the erlang cookie from the control plane container
+RUN apt-get update && apt-get install --no-install-recommends -y openssh-server && /etc/init.d/ssh start
+
+# extract "rabbitmqadmin" from inside the "rabbitmq_management-X.Y.Z.ez" plugin zipfile
+# see https://github.com/docker-library/rabbitmq/issues/207
+RUN set -eux; \
+	erl -noinput -eval ' \
+		{ ok, AdminBin } = zip:foldl(fun(FileInArchive, GetInfo, GetBin, Acc) -> \
+			case Acc of \
+				"" -> \
+					case lists:suffix("/rabbitmqadmin", FileInArchive) of \
+						true -> GetBin(); \
+						false -> Acc \
+					end; \
+				_ -> Acc \
+			end \
+		end, "", init:get_plain_arguments()), \
+		io:format("~s", [ AdminBin ]), \
+		init:stop(). \
+	' -- /plugins/rabbitmq_management-*.ez > /usr/local/bin/rabbitmqadmin; \
+	[ -s /usr/local/bin/rabbitmqadmin ]; \
+	chmod +x /usr/local/bin/rabbitmqadmin; \
+	apt-get update; apt-get install -y --no-install-recommends python; rm -rf /var/lib/apt/lists/*; \
+	rabbitmqadmin --version
+
+COPY ./keys/authorized_keys /var/lib/rabbitmq/.ssh/authorized_keys
+COPY customised-rabbit-startup.sh /
+
+ENTRYPOINT sh /customised-rabbit-startup.sh
+
+EXPOSE 15671 15672 22
