@@ -32,5 +32,5 @@ services:
             context: testing
         volumes:
             - ./testing:/app
-        entrypoint: npm run test
+        entrypoint: /app/bootstrap.sh
 
