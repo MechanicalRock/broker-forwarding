@@ -7,6 +7,8 @@ services:
         expose:    
             - 61616
             - 5672
+        volumes:
+            - ./conf:/opt/apache-activemq-5.15.6/conf
     rabbitmq:
         build:
             dockerfile: Dockerfile-rmqshovel

@@ -61,7 +61,6 @@ defineFeature(feature, scenario  => {
     	});
 
     	when(/^I publish (.*) messages to the source broker exchange$/, async (count) => {
-            console.log(`publishing to ${publishQueue}`);
             await publishToQueue(sourceConnection, publishQueue, count);
             await new Promise( (resolve: any) => setTimeout(resolve, 2000));
             await sourceConnection.close();
@@ -76,13 +75,13 @@ defineFeature(feature, scenario  => {
                 let queue = destConnection.open_receiver(publishQueue);
                 try {
                     let result = queue.on('message', (data: any) => { 
-                        console.log(data.message.body.content.toString());                        
                         messageCount++;
                     });
                 } catch (f) { }
-                await new Promise( (resolve: any) => setTimeout(resolve, 2000));
+                await new Promise( (resolve: any) => setTimeout(resolve, 1000));
                 await queue.close();
                 await destConnection.close();
+                await new Promise( (resolve: any) => setTimeout(resolve, 1000));
             } catch (e) {
                 console.log(e);
             }            
@@ -95,6 +94,7 @@ defineFeature(feature, scenario  => {
         let publishQueue = '';
         let destConnection: any;
         let queue: any;
+        let messageCount = 0;
        
         given('message forwarding is activated', () => {
             publishQueue = initialiseForwarding(queuePattern);            
@@ -103,8 +103,11 @@ defineFeature(feature, scenario  => {
     	and('I have subscribed to destination broker mirror queue', async () => {
             try {
                 destConnection = await Rhea.connect({host: destBrokerHost, port: 5672,} as Rhea.ConnectionOptions);
-                let mirrorQueue = `${publishQueue}.wiretap`;
-                queue = destConnection.open_receiver(mirrorQueue);
+                let mirrorQueue = `topic://${publishQueue}.wiretap`;
+                queue = destConnection.open_receiver(mirrorQueue,);
+                let result = queue.on('message', (data: any) => { 
+                    messageCount++;
+                });    
             } catch(e) {
                 console.log(e);
             }
@@ -122,12 +125,6 @@ defineFeature(feature, scenario  => {
     	});
 
     	then(/^my subscription should receive (.*) messages$/, async (count) => {
-            let messageCount = 0;
-            try {
-                let result = queue.on('message', (data: any) => { 
-                    messageCount++;
-                });
-            } catch (f) { }
             await new Promise( (resolve: any) => setTimeout(resolve, 2000));
             await queue.close();
             await destConnection.close();
