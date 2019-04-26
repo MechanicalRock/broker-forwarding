@@ -19,12 +19,16 @@ services:
             - 22
 
     control-plane:
+        env_file: .env
         build:
             dockerfile: Dockerfile-controller
             context: .
 
     testing:
+        env_file: .env
         build:
             context: testing
         volumes:
             - ./testing:/app
+        entrypoint: npm run test
+

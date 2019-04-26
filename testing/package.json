@@ -13,5 +13,9 @@
     "jest-cucumber": "^2.0.11",
     "ts-jest": "^24.0.2",
     "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "amqp-ts": "^1.4.0",
+    "rhea": "^1.0.6"
   }
 }
