@@ -97,14 +97,14 @@ defineFeature(feature, scenario  => {
         let queue: any;
        
         given('message forwarding is activated', () => {
-            publishQueue = initialiseForwarding(queuePattern);
-            publishQueue = `${publishQueue}.wiretap`;
+            publishQueue = initialiseForwarding(queuePattern);            
     	});
 
     	and('I have subscribed to destination broker mirror queue', async () => {
             try {
                 destConnection = await Rhea.connect({host: destBrokerHost, port: 5672,} as Rhea.ConnectionOptions);
-                queue = destConnection.open_receiver(publishQueue);
+                let mirrorQueue = `${publishQueue}.wiretap`;
+                queue = destConnection.open_receiver(mirrorQueue);
             } catch(e) {
                 console.log(e);
             }
@@ -125,7 +125,6 @@ defineFeature(feature, scenario  => {
             let messageCount = 0;
             try {
                 let result = queue.on('message', (data: any) => { 
-                    console.log(data.message.body.content.toString());                        
                     messageCount++;
                 });
             } catch (f) { }
