@@ -22,3 +22,9 @@ services:
         build:
             dockerfile: Dockerfile-controller
             context: .
+
+    testing:
+        build:
+            context: testing
+        volumes:
+            - ./testing:/app
