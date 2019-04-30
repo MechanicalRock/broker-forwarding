@@ -14,3 +14,8 @@ Rules
 
 Rules
 - Wiretap consumer can subscribe to mirrored queue topic and receive same messages as destination broker queue
+
+
+## Design
+
+![design for broker forwarding pattern](./broker-forwarding.jpg)
