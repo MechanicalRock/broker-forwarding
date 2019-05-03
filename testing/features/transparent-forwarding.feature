@@ -20,3 +20,10 @@ Feature: Transparent forwarding of messages from Rabbitmq exchange to ActiveMQ d
         And I have subscribed to destination broker mirror queue
         When I publish 10 messages to the source broker exchange 
           Then my subscription should receive 10 messages
+
+    Scenario: Mirror queues are durable once created
+      Given message forwarding is activated
+      And I create a durable subscription to destination broker mirror queue        
+        When I disconnect from the destination broker mirror queue
+        And I publish 10 messages to the source broker exchange 
+          Then on re-connection my subscription should receive 10 messages          

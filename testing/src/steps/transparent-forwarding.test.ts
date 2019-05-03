@@ -47,6 +47,7 @@ defineFeature(feature, scenario  => {
     });
 
     scenario('Publishing messages to source results in messages received on destination consumer queue', ({ given, when, then }) => {
+        Rhea.options.username = 'anonymous';
         const queuePattern = process.env['EXCHANGE_PATTERN_2'] || 'scenario2';
         let publishQueue = '';
         let sourceConnection: Amqp.Connection;
@@ -70,7 +71,6 @@ defineFeature(feature, scenario  => {
             let messageCount = 0;
             try {
                 // enable sasl even if no authentication is used. activemq default wire options require it
-                Rhea.options.username = 'anonymous';
                 let destConnection = await Rhea.connect({host: destBrokerHost, port: 5672,} as Rhea.ConnectionOptions);
                 let queue = destConnection.open_receiver(publishQueue);
                 try {
@@ -90,6 +90,7 @@ defineFeature(feature, scenario  => {
     });
 
     scenario('Publishing messages to source results in messages received on destination mirror queue', ({ given, and, when, then }) => {
+        Rhea.options.username = 'anonymous';
         const queuePattern = process.env['EXCHANGE_PATTERN_3'] || 'scenario3';
         let publishQueue = '';
         let destConnection: any;
@@ -103,7 +104,7 @@ defineFeature(feature, scenario  => {
     	and('I have subscribed to destination broker mirror queue', async () => {
             try {
                 destConnection = await Rhea.connect({host: destBrokerHost, port: 5672,} as Rhea.ConnectionOptions);
-                let mirrorQueue = `topic://${publishQueue}.wiretap`;
+                let mirrorQueue = `topic://VirtualTopic.${publishQueue}.wiretap`;
                 queue = destConnection.open_receiver(mirrorQueue,);
                 let result = queue.on('message', (data: any) => { 
                     messageCount++;
@@ -132,6 +133,71 @@ defineFeature(feature, scenario  => {
     	});
     });
 
+
+    scenario('Mirror queues are durable once created', ({ given, and, when, then }) => {
+        Rhea.options.username = 'anonymous';
+        const queuePattern = process.env['EXCHANGE_PATTERN_4'] || 'scenario4';
+        let publishQueue = '';
+        let destConnection: any;
+        let queue: any;
+        let messageCount = 0;
+        given('message forwarding is activated', () => {
+            publishQueue = initialiseForwarding(queuePattern);            
+    	});
+        
+        and('I create a durable subscription to destination broker mirror queue',async () => {
+            try {
+                console.log('creating durable subscription');
+                destConnection = await Rhea.connect({host: destBrokerHost, port: 5672} as Rhea.ConnectionOptions);
+                let mirrorQueue = `Consumer.jest.VirtualTopic.${publishQueue}.wiretap`;
+                queue = await destConnection.open_receiver(mirrorQueue);
+                await new Promise( (resolve: any) => setTimeout(resolve, 500));            
+            } catch(e) {
+                console.log(e);
+            }        
+        });
+        
+        when('I disconnect from the destination broker mirror queue', () => {
+            try {
+                console.log('disconnecting');
+                queue.close();
+                destConnection.close();
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        
+        and(/^I publish (.*) messages to the source broker exchange$/, async (count) => {
+            try {
+                let sourceConnection: Amqp.Connection;sourceConnection = new Amqp.Connection( `amqp://${sourceBrokerHost}` );
+                await publishToQueue(sourceConnection, publishQueue, count);
+                await new Promise( (resolve: any) => setTimeout(resolve, 500));
+                await sourceConnection.close();
+            } catch (e) {
+                console.log(e);
+            }
+        });
+        
+        then(/^on re-connection my subscription should receive (.*) messages$/, async (count) => {
+            expect(messageCount).toBe(0);
+            console.log('reconnecting');
+            try {
+                destConnection = await Rhea.connect({host: destBrokerHost, port: 5672} as Rhea.ConnectionOptions);
+                let mirrorQueue = `Consumer.jest.VirtualTopic.${publishQueue}.wiretap`;
+                queue = await destConnection.open_receiver(mirrorQueue);
+                queue.on('message', (data: any) => { 
+                    messageCount++;
+                });    
+            } catch(e) {
+                console.log(e);
+            }        
+            await new Promise( (resolve: any) => setTimeout(resolve, 500));
+            await queue.close();
+            await destConnection.close();
+            expect(messageCount).toBe( parseInt(count) );                   
+        });
+    });
+        
 });
 
 function initialiseForwarding(queuePattern: string): string {

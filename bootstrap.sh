@@ -13,6 +13,7 @@ echo "Rabbit host is $RABBITMQ_HOST"
 rabbitmqadmin -H rabbitmq declare exchange name=$EXCHANGE_PATTERN_1 type=topic
 rabbitmqadmin -H rabbitmq declare exchange name=$EXCHANGE_PATTERN_2 type=topic
 rabbitmqadmin -H rabbitmq declare exchange name=$EXCHANGE_PATTERN_3 type=topic
+rabbitmqadmin -H rabbitmq declare exchange name=$EXCHANGE_PATTERN_4 type=topic
 
 # declare the first queue and bind it to the exchange
 Q1="q.${EXCHANGE_PATTERN_1}"
@@ -31,3 +32,7 @@ rabbitmqctl --node $RABBITMQ_HOST set_parameter shovel "${EXCHANGE_PATTERN_2}-ac
 rabbitmqctl --node $RABBITMQ_HOST set_parameter shovel "${EXCHANGE_PATTERN_3}-activemq" \
 "{'src-protocol': 'amqp091', 'src-uri': 'amqp://guest:guest@rabbitmq:5672', 'src-exchange': \"$EXCHANGE_PATTERN_3\",'src-exchange-key': '#', \
   'dest-protocol': 'amqp10', 'dest-uri': 'amqp://admin:admin@activemq:5672','dest-address': \"$EXCHANGE_PATTERN_3\"}"
+
+rabbitmqctl --node $RABBITMQ_HOST set_parameter shovel "${EXCHANGE_PATTERN_4}-activemq" \
+"{'src-protocol': 'amqp091', 'src-uri': 'amqp://guest:guest@rabbitmq:5672', 'src-exchange': \"$EXCHANGE_PATTERN_4\",'src-exchange-key': '#', \
+  'dest-protocol': 'amqp10', 'dest-uri': 'amqp://admin:admin@activemq:5672','dest-address': \"$EXCHANGE_PATTERN_4\"}"

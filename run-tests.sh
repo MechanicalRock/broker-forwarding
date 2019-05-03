@@ -2,7 +2,7 @@
 
 MODE=$1
 if [ -z $MODE ]; then
-    MODE=up
+    MODE="up --build"
 else
     MODE=run
 fi
