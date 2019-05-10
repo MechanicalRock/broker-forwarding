@@ -25,12 +25,32 @@ services:
         build:
             dockerfile: Dockerfile-controller
             context: .
+        volumes:
+            - ~/.aws:/var/lib/rabbitmq/.aws
 
+    s3:
+        image: localstack/localstack
+        environment:
+            - SERVICES=s3
+        expose:
+            - 4572
+        ports:
+            - 4572:4572
     testing:
         env_file: .env
         build:
             context: testing
         volumes:
             - ./testing:/app
+            - ~/.aws:/root/.aws
         entrypoint: /app/bootstrap.sh
 
+
+    publish-to-s3:
+        build:
+            context: publishS3
+        volumes:
+            - ./publishS3:/app
+        entrypoint: >
+            npm install && nc -l 5555 && sls invoke local -f publish-to-s3
+            

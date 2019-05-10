@@ -147,7 +147,6 @@ defineFeature(feature, scenario  => {
         
         and('I create a durable subscription to destination broker mirror queue',async () => {
             try {
-                console.log('creating durable subscription');
                 destConnection = await Rhea.connect({host: destBrokerHost, port: 5672} as Rhea.ConnectionOptions);
                 let mirrorQueue = `Consumer.jest.VirtualTopic.${publishQueue}.wiretap`;
                 queue = await destConnection.open_receiver(mirrorQueue);
@@ -159,7 +158,6 @@ defineFeature(feature, scenario  => {
         
         when('I disconnect from the destination broker mirror queue', () => {
             try {
-                console.log('disconnecting');
                 queue.close();
                 destConnection.close();
             } catch (e) {
@@ -180,7 +178,6 @@ defineFeature(feature, scenario  => {
         
         then(/^on re-connection my subscription should receive (.*) messages$/, async (count) => {
             expect(messageCount).toBe(0);
-            console.log('reconnecting');
             try {
                 destConnection = await Rhea.connect({host: destBrokerHost, port: 5672} as Rhea.ConnectionOptions);
                 let mirrorQueue = `Consumer.jest.VirtualTopic.${publishQueue}.wiretap`;
