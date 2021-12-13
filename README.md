@@ -1,3 +1,6 @@
+**NOTE** This repository is not monitored and is unsuitable for production use.  It probably has known security vulnerabilities.
+
+
 # Broker to Broker forwarding
 
 This is a spike of selective broker to broker forwarding, specifically from RabbitMQ as a source to ActiveMQ as a destination
